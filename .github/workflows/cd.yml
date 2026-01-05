@@ -9,7 +9,21 @@ jobs:
     name: Deploy
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+      id-token: write
+
     steps:
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: "${{ secrets.GCP_CREDENTIALS }}"
+
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v3
+        with:
+          version: ">= 363.0.0"
+
       - name: Check out code
         uses: actions/checkout@v4
 
@@ -20,3 +34,9 @@ jobs:
 
       - name: Build the app binary
         run: scripts/buildprod.sh
+
+      - name: Use gcloud CLI
+        run: gcloud info
+
+      - name: Push artifact to Google artifact Repository
+        run: gcloud builds submit --tag us-central1-docker.pkg.dev/notely-483405/notely-ar-repo/diraulo/notely:latest

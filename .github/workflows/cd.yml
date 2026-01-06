@@ -15,7 +15,7 @@ jobs:
 
     env:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      PROJECT_ID: ${{ secrets.PROJECT_ID }}
 
     steps:
       - name: Check out code

@@ -13,6 +13,10 @@ jobs:
       contents: read
       id-token: write
 
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+
     steps:
       - name: Check out code
         uses: actions/checkout@v4
@@ -21,6 +25,9 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: "1.25.1"
+
+      - name: Install goose
+        run: go install github.com/pressly/goose/v3/cmd/goose@latest
 
       - name: Build the app binary
         run: scripts/buildprod.sh
@@ -39,7 +46,10 @@ jobs:
         run: gcloud info
 
       - name: Push artifact to Google artifact Repository
-        run: gcloud builds submit --tag us-central1-docker.pkg.dev/notely-483405/notely-ar-repo/diraulo/notely:latest
+        run: gcloud builds submit --tag us-central1-docker.pkg.dev/${{ env.PROJECT_ID }}/notely-ar-repo/diraulo/notely:latest
+      
+      - name: Run DB Migrations
+        run: scripts/migrateup.sh
 
       - name: Deploy to Cloud Run
-        run: gcloud run deploy notely --image us-central1-docker.pkg.dev/notely-483405/notely-ar-repo/diraulo/notely:latest --region us-central1 --allow-unauthenticated --project notely-483405 --max-instances=4
+        run: gcloud run deploy notely --image us-central1-docker.pkg.dev/${{ env.PROJECT_ID }}/notely-ar-repo/diraulo/notely:latest --region us-central1 --allow-unauthenticated --project ${{ env.PROJECT_ID }} --max-instances=4
